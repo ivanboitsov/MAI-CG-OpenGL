@@ -13,12 +13,12 @@ const unsigned int windowWidth = 1200;
 const unsigned int windowHeight = 800;
 
 // Размер точки для визуализации
-const float pointRadius = 5.0f;
+const float pointRadius = 7.0f;
 
 // Центр окна
 const Vector2f windowCenter(windowWidth / 2, windowHeight / 2);
 
-// Инициализация контрольных точек относительно центра окна
+// Инициализация вектора контрольных точек относительно центра окна
 Vector2f controlPoints[3] = {
     Vector2f(windowCenter.x - 300.0f, windowCenter.y),   // Левая точка
     Vector2f(windowCenter.x, windowCenter.y - 200.0f),   // Верхняя точка
@@ -33,7 +33,7 @@ bool isMouseOverPoint(const Vector2f& mousePos, const Vector2f& point) {
     return (abs(mousePos.x - point.x) < pointRadius) && (abs(mousePos.y - point.y) < pointRadius);
 }
 
-// Функция для вычисления точки на кривой Безье для параметра t
+// Функция для вычисления точки на кривой Безье для параметра t (по формуле для двух точек)
 Vector2f calculateBezierPoint(float t, const Vector2f& P0, const Vector2f& P1, const Vector2f& P2) {
     float u = 1 - t;
     float tt = t * t;
@@ -92,7 +92,7 @@ int main()
                 {
                     Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
                     // Проверяем, попали ли мы в одну из контрольных точек
-                    for (int i = 0; i < 3; ++i)
+                    for (int i = 0; i < 3; i++)
                     {
                         if (isMouseOverPoint(mousePos, controlPoints[i])) {
                             selectedPoint = i;  // Запоминаем, какую точку начали двигать

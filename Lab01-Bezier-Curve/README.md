@@ -179,9 +179,21 @@ for (float t = 0; t <= 1; t += 0.001f) {
 }
 ```
 
+Для регулировки сглаживания можно изменить шаг t в цикле, следующи образом: `for (float t = 0; t <= 1; t += 0.25f)`
+
 ## Результаты работы
 
 Программа работает в режиме реального времени и отрисовывает кривую относительно положения точек. Все точки в проекте можно двигать, нажав на неё мышью.
+
+#### Без сглаживания
+
+![image](https://github.com/user-attachments/assets/aafca6fd-ee74-45b6-927f-fc62b964316b)
+
+![image](https://github.com/user-attachments/assets/03db6c69-bb09-4ee6-b285-234bdc3584a3)
+
+![image](https://github.com/user-attachments/assets/c4b0f13e-b7ae-4484-bfa2-970072f80cdd)
+
+#### С применением сглаживания
 
 ![alt text](images/image.png)
 

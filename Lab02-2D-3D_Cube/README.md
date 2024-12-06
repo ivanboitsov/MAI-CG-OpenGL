@@ -13,6 +13,8 @@
 (например, угол обзора для перспективной и размер проекционного объема для
 ортографической).
 
+![alt text](images/task.png)
+
 ## Решение
 Используя настроенное с прошлой лабораторной окружение будем решать данную лабораторную работу.
 
@@ -73,12 +75,12 @@ void drawCube() {
 
 ```cpp
 // Переменные для управления мышью
+bool isPerspective = true; // Текущая проекция
 bool isDragging = false;
 Vector2i lastMousePosition;
-float cameraDistance = 5.0f; // Начальное расстояние до камеры
-float angleX = 0.0f; // Угол вращения по X
-float angleY = 0.0f; // Угол вращения по Y
-float orthoScale = 1.0f; // Масштаб для ортографической проекции
+float cameraDistance = 5.0f;
+float angleX = 0.0f, angleY = 0.0f;
+float orthoScale = 2.0f; // Масштаб ортографической проекции
 ```
 
 И напишем функцию, которая настраивать ортографическую и перспективную проекцию
@@ -88,15 +90,15 @@ float orthoScale = 1.0f; // Масштаб для ортографической
 void setupProjection() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    float aspect = static_cast<float>(windowWidth) / static_cast<float>(windowHeight);
+    float aspectRatio = static_cast<float>(windowWidth) / static_cast<float>(windowHeight);
+
     if (isPerspective) {
-        // Настройки перспективной проекции
-        gluPerspective(60.0f, aspect, 1.0f, 100.0f);
+        gluPerspective(60.0f, aspectRatio, 1.0f, 100.0f); // Перспективная проекция
     }
     else {
-        // Настройки ортографической проекции
-        glOrtho(-aspect * orthoScale, aspect * orthoScale, -1.0f * orthoScale, 1.0f * orthoScale, 1.0f, 100.0f);
+        glOrtho(-aspectRatio * orthoScale, aspectRatio * orthoScale, -1.0f * orthoScale, 1.0f * orthoScale, 1.0f, 100.0f); // Ортографическая проекция
     }
+
     glMatrixMode(GL_MODELVIEW);
 }
 ```
@@ -114,31 +116,32 @@ if (event.type == Event::KeyPressed && event.key.code == Keyboard::Space) {
 Наконец отрисуем наш куб
 
 ```cpp
-// Настройка камеры
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 glLoadIdentity();
-// Установка для перспективной проекции
-if (isPerspective) {
-    gluLookAt(0.0, 0.0, cameraDistance, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-    glRotatef(angleX, 1.0f, 0.0f, 0.0f);  // Вращение по X
-    glRotatef(angleY, 0.0f, 1.0f, 0.0f);  // Вращение по Y
-}
-else {
-    // Установка для ортографической проекции
-    glTranslatef(0.0f, 0.0f, -cameraDistance); // Установка расстояния до куба
-}
+gluLookAt(0.0f, 0.0f, cameraDistance, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
-// Отрисовка куба
+glRotatef(angleX, 1.0f, 0.0f, 0.0f);
+glRotatef(angleY, 0.0f, 1.0f, 0.0f);
+
 drawCube();
+window.display();
 ```
 
 Теперь выполним дополнительное задание. Добавим возможность вращения куба с помощью движения зажатой мышки при переспективной проекции или отдаления ортографической проекции скроллом колесика мышки.
 
 ```cpp
-// Обработка нажатия мыши
+if (event.type == Event::MouseWheelScrolled) {
+    if (!isPerspective) {
+        orthoScale *= (event.mouseWheelScroll.delta > 0) ? 0.9f : 1.1f;
+        setupProjection();
+    }
+}
 if (event.type == Event::MouseButtonPressed) {
-    if (event.mouseButton.button == Mouse::Left) {
-        isDragging = true;
-        lastMousePosition = Mouse::getPosition(window);
+    if (isPerspective) {
+        if (event.mouseButton.button == Mouse::Left) {
+            isDragging = true;
+            lastMousePosition = Mouse::getPosition(window);
+        }
     }
 }
 if (event.type == Event::MouseButtonReleased) {
@@ -146,33 +149,11 @@ if (event.type == Event::MouseButtonReleased) {
         isDragging = false;
     }
 }
-// Обработка движения мыши
-if (event.type == Event::MouseMoved) {
-    if (isDragging) {
-        Vector2i currentMousePosition = Mouse::getPosition(window);
-        int deltaX = currentMousePosition.x - lastMousePosition.x;
-        int deltaY = currentMousePosition.y - lastMousePosition.y;
-
-        // Изменение угла вращения только в перспективной проекции
-        if (isPerspective) {
-            angleY += deltaX * 0.5f;  // Поворот вокруг Y
-            angleX += deltaY * 0.5f;  // Поворот вокруг X
-        }
-        lastMousePosition = currentMousePosition;
-    }
-}
-
-// Обработка прокрутки колесика мыши для изменения масштаба ортографической проекции
-if (event.type == Event::MouseWheelScrolled) {
-    if (!isPerspective) {
-        if (event.mouseWheelScroll.delta > 0) {
-            orthoScale *= 0.9f; // Уменьшение масштаба (увеличение объекта)
-        }
-        else {
-            orthoScale *= 1.1f; // Увеличение масштаба (уменьшение объекта)
-        }
-        setupProjection();
-    }
+if (event.type == Event::MouseMoved && isDragging) {
+    Vector2i currentMousePosition = Mouse::getPosition(window);
+    angleY += (currentMousePosition.x - lastMousePosition.x) * 0.5f;
+    angleX += (currentMousePosition.y - lastMousePosition.y) * 0.5f;
+    lastMousePosition = currentMousePosition;
 }
 ```
 
@@ -183,10 +164,14 @@ if (event.type == Event::MouseWheelScrolled) {
 ### 3D проекция
 ![alt text](images/image.png)
 
+## 2D проекция
 ![alt text](images/image-1.png)
 
-## 2D проекция
+### 3D проекция
+
 ![alt text](images/image-2.png)
+
+## 2D проекция
 
 ![alt text](images/image-3.png)
 

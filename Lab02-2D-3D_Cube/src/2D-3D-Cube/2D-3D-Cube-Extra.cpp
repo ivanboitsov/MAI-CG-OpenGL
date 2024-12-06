@@ -13,79 +13,72 @@ using namespace std;
 // Параметры окна
 const unsigned int windowWidth = 1200;
 const unsigned int windowHeight = 800;
-const float aspectRatio = static_cast<float>(windowWidth) / windowHeight;
 
-// Центр окна
-const Vector2f windowCenter(windowWidth / 2, windowHeight / 2);
-
-// Переменные для проекций
-bool isPerspective = true;
-
-// Переменные для управления мышью
+// Переменные для управления
+bool isPerspective = true; // Текущая проекция
 bool isDragging = false;
 Vector2i lastMousePosition;
-float cameraDistance = 5.0f; // Начальное расстояние до камеры
-float angleX = 0.0f; // Угол вращения по X
-float angleY = 0.0f; // Угол вращения по Y
-float orthoScale = 1.0f; // Масштаб для ортографической проекции
+float cameraDistance = 5.0f;
+float angleX = 0.0f, angleY = 0.0f;
+float orthoScale = 2.0f; // Масштаб ортографической проекции
 
-// Функция для настройки проекции
+// Настройка проекции
 void setupProjection() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    float aspect = static_cast<float>(windowWidth) / static_cast<float>(windowHeight);
+    float aspectRatio = static_cast<float>(windowWidth) / static_cast<float>(windowHeight);
+
     if (isPerspective) {
-        // Настройки перспективной проекции
-        gluPerspective(60.0f, aspect, 1.0f, 100.0f);
+        gluPerspective(60.0f, aspectRatio, 1.0f, 100.0f); // Перспективная проекция
     }
     else {
-        // Настройки ортографической проекции
-        glOrtho(-aspect * orthoScale, aspect * orthoScale, -1.0f * orthoScale, 1.0f * orthoScale, 1.0f, 100.0f);
+        glOrtho(-aspectRatio * orthoScale, aspectRatio * orthoScale, -1.0f * orthoScale, 1.0f * orthoScale, 1.0f, 100.0f); // Ортографическая проекция
     }
+
     glMatrixMode(GL_MODELVIEW);
 }
 
-// Функция для отрисовки куба
+// Отрисовка куба
 void drawCube() {
     glBegin(GL_QUADS);
 
-    // Верхняя грань (y = 1.0f)
-    glColor3f(1.0f, 0.0f, 0.0f);  // Красный
+    // Верхняя грань
+    glColor3f(1.0f, 0.0f, 0.0f); // Красная
     glVertex3f(-1.0f, 1.0f, -1.0f);
     glVertex3f(1.0f, 1.0f, -1.0f);
     glVertex3f(1.0f, 1.0f, 1.0f);
     glVertex3f(-1.0f, 1.0f, 1.0f);
 
-    // Нижняя грань (y = -1.0f)
-    glColor3f(0.0f, 1.0f, 0.0f);  // Зеленый
+    // Нижняя грань
+    glColor3f(0.0f, 1.0f, 0.0f); // Зелёная
     glVertex3f(-1.0f, -1.0f, -1.0f);
     glVertex3f(1.0f, -1.0f, -1.0f);
     glVertex3f(1.0f, -1.0f, 1.0f);
     glVertex3f(-1.0f, -1.0f, 1.0f);
 
-    // Передняя грань (z = 1.0f)
-    glColor3f(0.0f, 0.0f, 1.0f);  // Синий
+    // Передняя грань
+    glColor3f(0.0f, 0.0f, 1.0f); // Синяя
     glVertex3f(-1.0f, -1.0f, 1.0f);
     glVertex3f(1.0f, -1.0f, 1.0f);
     glVertex3f(1.0f, 1.0f, 1.0f);
     glVertex3f(-1.0f, 1.0f, 1.0f);
 
-    // Задняя грань (z = -1.0f)
-    glColor3f(1.0f, 1.0f, 0.0f);  // Желтый
+    // Задняя грань
+    glColor3f(1.0f, 1.0f, 0.0f); // Жёлтая
     glVertex3f(-1.0f, -1.0f, -1.0f);
     glVertex3f(1.0f, -1.0f, -1.0f);
     glVertex3f(1.0f, 1.0f, -1.0f);
     glVertex3f(-1.0f, 1.0f, -1.0f);
 
-    // Левая грань (x = -1.0f)
-    glColor3f(1.0f, 0.0f, 1.0f);  // Фиолетовый
+    // Левая грань
+    glColor3f(1.0f, 0.0f, 1.0f); // Фиолетовая
     glVertex3f(-1.0f, -1.0f, -1.0f);
     glVertex3f(-1.0f, -1.0f, 1.0f);
     glVertex3f(-1.0f, 1.0f, 1.0f);
     glVertex3f(-1.0f, 1.0f, -1.0f);
 
-    // Правая грань (x = 1.0f)
-    glColor3f(0.0f, 1.0f, 1.0f);  // Голубой
+    // Правая грань
+    glColor3f(0.0f, 1.0f, 1.0f); // Голубая
     glVertex3f(1.0f, -1.0f, -1.0f);
     glVertex3f(1.0f, -1.0f, 1.0f);
     glVertex3f(1.0f, 1.0f, 1.0f);
@@ -94,40 +87,40 @@ void drawCube() {
     glEnd();
 }
 
+// Главная функция
 int main() {
-    // Настройки контекста OpenGL: 24 бита на буфер глубины
     ContextSettings settings;
     settings.depthBits = 24;
 
-    // Создаем окно с использованием OpenGL
     Window window(VideoMode(windowWidth, windowHeight), "3D Cube", Style::Titlebar | Style::Close, settings);
-    window.setFramerateLimit(120);
+    window.setFramerateLimit(60);
     glEnable(GL_DEPTH_TEST);
-
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
 
-    // Настраиваем начальную проекцию
     setupProjection();
 
-    // Основной цикл программы
     while (window.isOpen()) {
         Event event;
         while (window.pollEvent(event)) {
             if (event.type == Event::Closed) {
                 window.close();
             }
-
-            // Обработка нажатия пробела для переключения проекций
             if (event.type == Event::KeyPressed && event.key.code == Keyboard::Space) {
                 isPerspective = !isPerspective;
                 setupProjection();
             }
-
-            // Обработка нажатия мыши
+            if (event.type == Event::MouseWheelScrolled) {
+                if (!isPerspective) {
+                    orthoScale *= (event.mouseWheelScroll.delta > 0) ? 0.9f : 1.1f;
+                    setupProjection();
+                }
+            }
             if (event.type == Event::MouseButtonPressed) {
-                if (event.mouseButton.button == Mouse::Left) {
-                    isDragging = true;
-                    lastMousePosition = Mouse::getPosition(window);
+                if (isPerspective) {
+                    if (event.mouseButton.button == Mouse::Left) {
+                        isDragging = true;
+                        lastMousePosition = Mouse::getPosition(window);
+                    }
                 }
             }
             if (event.type == Event::MouseButtonReleased) {
@@ -135,55 +128,22 @@ int main() {
                     isDragging = false;
                 }
             }
-            // Обработка движения мыши
-            if (event.type == Event::MouseMoved) {
-                if (isDragging) {
-                    Vector2i currentMousePosition = Mouse::getPosition(window);
-                    int deltaX = currentMousePosition.x - lastMousePosition.x;
-                    int deltaY = currentMousePosition.y - lastMousePosition.y;
-
-                    // Изменение угла вращения только в перспективной проекции
-                    if (isPerspective) {
-                        angleY += deltaX * 0.5f;  // Поворот вокруг Y
-                        angleX += deltaY * 0.5f;  // Поворот вокруг X
-                    }
-                    lastMousePosition = currentMousePosition;
-                }
-            }
-            // Обработка прокрутки колесика мыши для изменения масштаба ортографической проекции
-            if (event.type == Event::MouseWheelScrolled) {
-                if (!isPerspective) {
-                    if (event.mouseWheelScroll.delta > 0) {
-                        orthoScale *= 0.9f; // Уменьшение масштаба (увеличение объекта)
-                    }
-                    else {
-                        orthoScale *= 1.1f; // Увеличение масштаба (уменьшение объекта)
-                    }
-                    setupProjection();
-                }
+            if (event.type == Event::MouseMoved && isDragging) {
+                Vector2i currentMousePosition = Mouse::getPosition(window);
+                angleY += (currentMousePosition.x - lastMousePosition.x) * 0.5f;
+                angleX += (currentMousePosition.y - lastMousePosition.y) * 0.5f;
+                lastMousePosition = currentMousePosition;
             }
         }
 
-        // Очистка экрана
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // Настройка камеры
         glLoadIdentity();
-        // Установка для перспективной проекции
-        if (isPerspective) {
-            gluLookAt(0.0, 0.0, cameraDistance, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-            glRotatef(angleX, 1.0f, 0.0f, 0.0f);  // Вращение по X
-            glRotatef(angleY, 0.0f, 1.0f, 0.0f);  // Вращение по Y
-        }
-        else {
-            // Установка для ортографической проекции
-            glTranslatef(0.0f, 0.0f, -cameraDistance); // Установка расстояния до куба
-        }
+        gluLookAt(0.0f, 0.0f, cameraDistance, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
-        // Отрисовка куба
+        glRotatef(angleX, 1.0f, 0.0f, 0.0f);
+        glRotatef(angleY, 0.0f, 1.0f, 0.0f);
+
         drawCube();
-
-        // Отображение результата на экране
         window.display();
     }
 

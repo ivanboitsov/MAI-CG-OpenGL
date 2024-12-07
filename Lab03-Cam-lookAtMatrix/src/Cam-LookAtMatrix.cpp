@@ -142,7 +142,6 @@ int main() {
                 if (isLeftDragging) {
                     Vector2i currentMousePosition = Mouse::getPosition(window);
                     angleAroundCube += (currentMousePosition.x - lastMousePosition.x) * 0.5f;
-                    angleX -= (currentMousePosition.y - lastMousePosition.y) * 0.5f;
                     lastMousePosition = currentMousePosition;
                 }
                 else if (isRightDragging) {
